@@ -3,6 +3,7 @@ package com.store.store.controller;
 
 import com.store.store.entity.StoreEntity;
 import com.store.store.kafka.KafkaProducer;
+import com.store.store.mapper.StoreEntityToJason;
 import com.store.store.service.ServiceImp;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,8 @@ public class StoreController {
 
     @PostMapping("/create")
     public ResponseEntity<StoreEntity> create(@Valid @RequestBody StoreEntity storeEntity){
-        kafkaProducer.sendMessage(storeEntity);
+        String kafkaMessage= StoreEntityToJason.convertNotificationToJason(storeEntity);
+        kafkaProducer.sendMessage((kafkaMessage));
         return new ResponseEntity<>(serviceImp.create(storeEntity), HttpStatus.CREATED);
     }
 

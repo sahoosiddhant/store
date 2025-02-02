@@ -5,6 +5,7 @@ import com.store.store.kafka.KafkaProducer;
 import com.store.store.mapper.StoreEntityToJason;
 import com.store.store.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -30,6 +31,8 @@ public class ServiceImp {
 
     public StoreEntity create(StoreEntity storeEntity) {
 
+
+
         //unique store notification ID
         storeEntity.setStore_key("store-notification-"+ UUID.randomUUID().toString());
 
@@ -42,8 +45,6 @@ public class ServiceImp {
         metadataRepo.save(metadata);
 
         Value value =valueRepo.save(storeEntity.getValue());
-
-        String kafkaMessage= StoreEntityToJason.convertNotificationToJason(storeEntity);
 
         return storeRepo.save(storeEntity);
 
