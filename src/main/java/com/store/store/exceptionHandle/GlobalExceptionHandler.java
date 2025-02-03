@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +23,10 @@ public class GlobalExceptionHandler {
             String message=violation.getMessage();
             error.put(name,message);
         });
+
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
+
 
 }
 

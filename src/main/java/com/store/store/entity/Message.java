@@ -19,6 +19,7 @@ public class Message {
     private String title;
     private String body;
 
+
     @OneToOne(mappedBy = "message")
     private Value value;
 

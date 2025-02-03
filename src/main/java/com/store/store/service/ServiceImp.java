@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -25,6 +26,8 @@ public class ServiceImp {
     private ValueRepo valueRepo;
     @Autowired
     private KafkaProducer kafkaProducer;
+    @Autowired
+    private StoreFailRepo storeFailRepo;
 
 
 
@@ -41,13 +44,46 @@ public class ServiceImp {
         Metadata metadata= storeEntity.getValue().getMetadata();
 
         //set meta data timestamp
-        metadata.setTimestamp(String.valueOf(System.currentTimeMillis()));
+        metadata.setTimestamp(String.valueOf(LocalDateTime.now()));
         metadataRepo.save(metadata);
 
         Value value =valueRepo.save(storeEntity.getValue());
 
         return storeRepo.save(storeEntity);
 
+    }
+
+    public StoreFailure sendFailMessage (StoreEntity storeEntity){
+
+        StoreFailure.ValueFail.MessageFail messageFail= new StoreFailure.ValueFail.MessageFail(
+                storeEntity.getValue().getMessage().getTitle(),
+                storeEntity.getValue().getMessage().getBody()
+        );
+
+        StoreFailure.ValueFail.DestinationFail destinationFail= new StoreFailure.ValueFail.DestinationFail(
+                storeEntity.getValue().getDestination().getStore(),
+                storeEntity.getValue().getDestination().getDepartment(),
+                storeEntity.getValue().getDestination().getJobcode(),
+                storeEntity.getValue().getDestination().getRole(),
+                storeEntity.getValue().getDestination().getSalesId(),
+                storeEntity.getValue().getDestination().getSourceSystem()
+        );
+        
+        StoreFailure.ValueFail.MetadataFail metadataFail=new StoreFailure.ValueFail.MetadataFail(
+                storeEntity.getValue().getMetadata().getPriority(),
+                storeEntity.getValue().getMetadata().getTimestamp()
+        );
+
+
+        StoreFailure.ValueFail valueFail= new StoreFailure.ValueFail(messageFail,destinationFail,metadataFail);
+
+        StoreFailure storeFailEntity= new StoreFailure(
+                storeEntity.getId(),
+                storeEntity.getStore_key(),
+                valueFail
+        );
+        
+        return storeFailRepo.save(storeFailEntity);
     }
 
     public void deleteStore(Long id) {
