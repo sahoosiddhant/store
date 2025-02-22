@@ -5,7 +5,10 @@ import com.store.store.kafka.KafkaProducer;
 import com.store.store.mapper.StoreEntityToJason;
 import com.store.store.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -25,8 +28,8 @@ public class ServiceImp {
     private ValueRepo valueRepo;
     @Autowired
     private KafkaProducer kafkaProducer;
-
-
+    @Autowired
+    private MessageChannel messageChannel;
 
 
     public StoreEntity create(StoreEntity storeEntity) {
@@ -45,10 +48,19 @@ public class ServiceImp {
         metadataRepo.save(metadata);
 
         Value value =valueRepo.save(storeEntity.getValue());
-
-        return storeRepo.save(storeEntity);
+        StoreEntity saveStoreEntity= storeRepo.save(storeEntity);
+        sendToMqtt(saveStoreEntity);
+        return saveStoreEntity;
 
     }
+
+    public void sendToMqtt(StoreEntity storeEntity){
+        org.springframework.messaging.Message<String> message= MessageBuilder.withPayload((storeEntity.getValue().getDestination().toString()))
+                .setHeader(MqttHeaders.TOPIC,"my_store")
+                .build();
+        messageChannel.send(message);
+    }
+
 
     public void deleteStore(Long id) {
 

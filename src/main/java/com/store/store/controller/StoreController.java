@@ -15,13 +15,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/store_app")
 public class StoreController {
 
+
     @Autowired
     private ServiceImp serviceImp;
 
     @Autowired
     private KafkaProducer kafkaProducer;
 
-    public StoreController(KafkaProducer kafkaProducer) {
+    public StoreController(ServiceImp serviceImp, KafkaProducer kafkaProducer) {
+        this.serviceImp = serviceImp;
         this.kafkaProducer = kafkaProducer;
     }
 
