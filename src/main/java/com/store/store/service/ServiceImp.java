@@ -1,7 +1,8 @@
 package com.store.store.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.store.store.entity.*;
-import com.store.store.kafka.KafkaProducer;
 import com.store.store.mapper.StoreEntityToJason;
 import com.store.store.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +28,10 @@ public class ServiceImp {
     @Autowired
     private ValueRepo valueRepo;
     @Autowired
-    private KafkaProducer kafkaProducer;
-    @Autowired
     private MessageChannel messageChannel;
 
 
-    public StoreEntity create(StoreEntity storeEntity) {
+    public StoreEntity create(StoreEntity storeEntity) throws JsonProcessingException {
 
 
 
@@ -54,11 +53,19 @@ public class ServiceImp {
 
     }
 
-    public void sendToMqtt(StoreEntity storeEntity){
-        org.springframework.messaging.Message<String> message= MessageBuilder.withPayload((storeEntity.getValue().getDestination().toString()))
-                .setHeader(MqttHeaders.TOPIC,"my_store")
-                .build();
-        messageChannel.send(message);
+    public void sendToMqtt(StoreEntity storeEntity) throws JsonProcessingException {
+        try{
+            String jasonPayload =new ObjectMapper().writeValueAsString(storeEntity.getValue().getDestination());
+            System.out.println("Received "+ jasonPayload);
+            org.springframework.messaging.Message<String> message= MessageBuilder
+                    .withPayload(new ObjectMapper().writeValueAsString(storeEntity.getValue().getDestination().toString()))
+                    .setHeader(MqttHeaders.TOPIC,"my_store")
+                    .build();
+            messageChannel.send(message);
+        }catch (Exception e){
+            System.out.println(" Error "+e.getMessage());
+        }
+
     }
 
 

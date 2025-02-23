@@ -1,8 +1,9 @@
 package com.store.store.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.store.store.entity.StoreEntity;
-import com.store.store.kafka.KafkaProducer;
+
 import com.store.store.mapper.StoreEntityToJason;
 import com.store.store.service.ServiceImp;
 import jakarta.validation.Valid;
@@ -19,18 +20,15 @@ public class StoreController {
     @Autowired
     private ServiceImp serviceImp;
 
-    @Autowired
-    private KafkaProducer kafkaProducer;
 
-    public StoreController(ServiceImp serviceImp, KafkaProducer kafkaProducer) {
+    public StoreController(ServiceImp serviceImp) {
         this.serviceImp = serviceImp;
-        this.kafkaProducer = kafkaProducer;
+
     }
 
     @PostMapping("/create")
-    public ResponseEntity<StoreEntity> create(@Valid @RequestBody StoreEntity storeEntity){
+    public ResponseEntity<StoreEntity> create(@Valid @RequestBody StoreEntity storeEntity) throws JsonProcessingException {
         String kafkaMessage= StoreEntityToJason.convertNotificationToJason(storeEntity);
-        kafkaProducer.sendMessage((kafkaMessage));
         return new ResponseEntity<>(serviceImp.create(storeEntity), HttpStatus.CREATED);
     }
 
